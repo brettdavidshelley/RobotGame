@@ -45,20 +45,20 @@ void lcd_write_byte(uint8_t data) {
     uart_write_bytes(UART_NUM, (const char*)&data, 1);
 }
 
-// Initialize the LCD (sending basic commands over UART)
-void lcd_init() {
-    lcd_write_byte(0x33);  // Initialize
-    lcd_write_byte(0x32);  // Initialize
-    lcd_write_byte(0x06);  // Entry mode
-    lcd_clear();
-}
-
 // Clear the LCD screen
 void lcd_clear() {
     lcd_write_byte(0x0C);  // Display on, cursor off
     lcd_write_byte(0x28);  // 4-bit mode, 2-line display
     lcd_write_byte(0x01);  // Clear display
     vTaskDelay(pdMS_TO_TICKS(2)); // Wait for the command to be processed
+}
+
+// Initialize the LCD (sending basic commands over UART)
+void lcd_init() {
+    lcd_write_byte(0x33);  // Initialize
+    lcd_write_byte(0x32);  // Initialize
+    lcd_write_byte(0x06);  // Entry mode
+    lcd_clear();
 }
 
 // Display a string on the LCD over UART
@@ -112,8 +112,11 @@ extern "C" void app_main() {
     lcd_init();
     printf("All devices initialized!\n");
 
-    char key_buf[16];
-    int key_idx, row_idx, col_idx = 0;
+    int key_buf_len = 16;
+    char key_buf[key_buf_len];
+    int key_idx = 0;
+    int row_idx = 0;
+    int col_idx = 0;
     while (1) {
         char key = scan_keypad();
         if (key != '\0') {
@@ -131,6 +134,9 @@ extern "C" void app_main() {
                 row_idx++;
             }
             // Add the key to the buffer
+            if (key_idx == key_buf_len - 1) {
+                key_idx = 0;
+            }
             key_buf[key_idx++] = key;
 
             // Display on the LCD
