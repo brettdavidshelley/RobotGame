@@ -11,8 +11,8 @@
 #define UART_TX_PIN        17  // ESP32 TX pin connected to LCD RX
 #define UART_RX_PIN        16  // ESP32 RX pin connected to LCD TX
 #define UART_BUF_SIZE      1024
-#define LCD_NUM_ROWS       4
-#define LCD_NUM_COLS       20
+#define LCD_NUM_ROWS       2
+#define LCD_NUM_COLS       16
 
 // 4x4 Keypad
 #define KEYPAD_NUM_ROWS  4
