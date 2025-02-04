@@ -47,8 +47,6 @@ void lcd_write_byte(uint8_t data) {
 
 // Clear the LCD screen
 void lcd_clear() {
-    lcd_write_byte(0x0C);  // Display on, cursor off
-    lcd_write_byte(0x28);  // 4-bit mode, 2-line display
     lcd_write_byte(0x01);  // Clear display
     vTaskDelay(pdMS_TO_TICKS(2)); // Wait for the command to be processed
 }
@@ -58,6 +56,8 @@ void lcd_init() {
     lcd_write_byte(0x33);  // Initialize
     lcd_write_byte(0x32);  // Initialize
     lcd_write_byte(0x06);  // Entry mode
+    lcd_write_byte(0x0C);  // Display on, cursor off
+    lcd_write_byte(0x28);  // 4-bit mode, 2-line display
     lcd_clear();
 }
 
