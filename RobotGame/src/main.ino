@@ -1,10 +1,13 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SerLCD.h>
+#include "games.h"
 
 // 16x2 LCD
 #define LCD_NUM_ROWS     2
 #define LCD_NUM_COLS     16
+#define TOP              0
+#define BOTTOM           1
 SerLCD lcd;
 
 // 4x4 Keypad
@@ -30,6 +33,20 @@ void lcd_init() {
 void clear_lcd() {
   lcd.clear();
   delay(200);
+}
+
+void print_centered(String message, int row) {
+  if (message.length() < 16) {
+    lcd.setCursor((16 - message.length()) >> 1, row);
+  } else {
+    lcd.setCursor(0, row);
+  }
+  Serial.print(message);
+}
+
+void center_cursor(int row) {
+  lcd.setCursor(7, row);
+  lcd.cursor();
 }
 
 // Function to initialize GPIOs for the keypad
@@ -68,32 +85,59 @@ char scan_keypad() {
     return '\0'; // No key pressed
 }
 
+bool is_num(char key) {
+  if (key == '0' || key == '1' || key == '2' || key == '3' || key == '4')
+    return true;
+  if (key == '5' || key == '6' || key == '7' || key =='8' || key == '9')
+    return true;
+  return false;
+}
+
+// TODO: Implement logic for correct/incorrect answers.
+void correct() {
+  // Implement the code to buzz speaker with correct noise and nod yes.
+  return;
+}
+
+void incorrect() {
+  // Implement the code to buzz speaker with incorrect noise and nod no.
+  return;
+}
+
+void prepare_game() {
+  clear_lcd();
+  print_centered("*: del, #: esc", TOP);
+  print_centered("Button submits.", BOTTOM);
+  delay(4000);
+}
+
+void initial_output() {
+  String opening_str = "Math (A) or Music (B)?";
+  print_centered(opening_str, TOP);
+  center_cursor(BOTTOM);
+}
+
 void setup() {
     // Initialize devices
     lcd_init();
     keypad_init();
     Serial.begin(9600);
+    initial_output();
 }
 
 void loop() {
-    int row_idx = 0;
-    int col_idx = 0;
-    
     char key = scan_keypad();
-    if (key != '\0') {
-        // If the LCD is full, clear and restart.
-        if (row_idx == LCD_NUM_ROWS - 1 && col_idx == LCD_NUM_COLS - 1) {
-            clear_lcd();
-            col_idx = 0;
-            row_idx = 0;
-        }
-        // If the row is full, increment to the next row.
-        else if (col_idx == 15) {
-            col_idx = 0;
-            row_idx++;
-        }
-        lcd.setCursor(col_idx++, row_idx);
-        Serial.print(key);
+    if (key == 'A' or key == 'B') {
+      print_centered(key, BOTTOM);
+      delay(500);
+      prepare_game();
+
+      // Math Game
+      if (key == 'A')
+        math_main();
+      // Music Game
+      else if (key == 'B')
+        music_main();
     }
     delay(100); // Delay for a while before scanning again
 }
