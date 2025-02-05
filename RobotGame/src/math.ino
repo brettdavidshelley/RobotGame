@@ -1,42 +1,45 @@
 #include "main.h"
 
+AlmostRandom MATH_RANDOM = AlmostRandom();
+String question;
+
 void math_main() {
   while (1) {
     // Generate random question
-    byte op_byte = RANDOM.getRandomByte();
+    byte op_byte = MATH_RANDOM.getRandomByte();
     // ~65% chance of addition question
-    char operator = '+';
+    char op = '+';
     // 64 / 255 --> ~25% chance of subtraction question
     if (op_byte <= 63) {
-      operator = '-';
-      // No negative answers
-      if (num1 < num2) {
-        temp = num1;
-        num1 = num2;
-        num2 = temp;
-      }
+      op = '-';
     }
     // 25 / 255 --> ~10% chance of multiplication question
     else if (op_byte >= 230) {
-      operator = '*';
+      op = '*';
     }
 
     // Generate random numbers based on operator (smaller numbers for *)
     int scaledown;
-    if (operator == '*') {
+    if (op == '*') {
       scaledown = 2730;
     } else {
       scaledown = 328;
     }
-    int num1 = RANDOM.getRandomInt() / scaledown;
-    int num2 = RANDOM.getRandomINT() / scaledown;
+    int num1 = MATH_RANDOM.getRandomInt() / scaledown;
+    int num2 = MATH_RANDOM.getRandomInt() / scaledown;
+
+    if (op == '-' && num1 < num2) {
+      int temp = num1;
+      num1 = num2;
+      num2 = temp;
+    }
 
     // Calculate answer and wait for user input.
-    String question = String(num1) + ' ' + operator + ' ' + String(num2);
+    question = String(num1) + ' ' + op + ' ' + String(num2);
     print_centered(question, TOP);
-    int answer = calculate_answer(num1, operator, num2);
+    int answer = calculate_answer(num1, op, num2);
     center_cursor(BOTTOM);
-    int response = process_input();
+    int response = process_input_math();
 
     // Exit
     if (response == -1) {
@@ -57,13 +60,13 @@ void math_main() {
 }
 
 bool valid_input(char key) {
-  if (is_num(key) or key == '*') {
+  if (is_num(key) || key == '*') {
     return true;
   }
   return false;
 }
 
-int process_input() {
+int process_input_math() {
   bool submitted = false;
   char key;
   String response = "";
@@ -83,12 +86,12 @@ int process_input() {
     if (valid_input(key)) {
       // Append the input to the response.
       if (is_num(key)) {
-        response.append(key);
+        response += String(key);
       }
 
       // Backspace
       else if (key == '*') {
-        response.remove(strlen(response) - 1);
+        response.remove(strlen(response.c_str()) - 1);
       }
       
       // Show current response on bottom row.
@@ -107,18 +110,18 @@ int process_input() {
   } else if (response == "") {
     return 0;
   } else {
-    return stoi(response);
+    return response.toInt();
   }
 }
 
-int calculate_answer(int num1, char operator, int num2) {
-  if (operator == '+') {
+int calculate_answer(int num1, char op, int num2) {
+  if (op == '+') {
     return num1 + num2;
-  } else if (operator == '-') {
+  } else if (op == '-') {
     return num1 - num2;
-  } else if (operator == '*') {
+  } else if (op == '*') {
     return num1 * num2;
-  } else if (operator == '/') {
+  } else if (op == '/') {
     return num1 / num2;
   } else {
     return 0;

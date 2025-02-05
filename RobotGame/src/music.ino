@@ -1,13 +1,14 @@
-#include <Ultrasonic.h>
 #include "main.h"
+#include <Ultrasonic.h>
 
+AlmostRandom MUSIC_RANDOM = AlmostRandom();
 Ultrasonic ultrasonic(TRIG, ECHO);
 int sensor_distance;
 
 void music_main() {
   while (1) {
     // Generate random numbers
-    byte note_byte = RANDOM.getRandomByte();
+    byte note_byte = MUSIC_RANDOM.getRandomByte();
     char note = 'A';
 
     // Equal chance of A, B, C, D, E, F, or G
@@ -30,7 +31,7 @@ void music_main() {
     String question_bottom = "using the sensor.";
     print_centered(question_top, TOP);
     print_centered(question_bottom, BOTTOM);
-    char response = process_input();
+    char response = process_input_music();
 
     // Exit
     if (response == '#') {
@@ -50,7 +51,7 @@ void music_main() {
   }
 }
 
-char process_input() {
+char process_input_music() {
   char selected_note;
   char key;
 
@@ -78,5 +79,5 @@ char process_input() {
 
 char cm_to_note(int cm) {
   // TODO: Implement logic to relate distance in centimeters to the note being buzzed by the speaker.
-  return;
+  return 'A';
 }

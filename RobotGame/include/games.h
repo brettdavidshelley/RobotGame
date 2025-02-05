@@ -1,2 +1,2 @@
-void                math_main(void);
-void                music_main(void);
+void math_main(void);
+void music_main(void);

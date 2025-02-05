@@ -2,12 +2,11 @@
 #include <Wire.h>
 #include <SerLCD.h>
 #include "games.h"
+#include "global.h"
 
 // 16x2 LCD
 #define LCD_NUM_ROWS     2
 #define LCD_NUM_COLS     16
-#define TOP              0
-#define BOTTOM           1
 SerLCD lcd;
 
 // 4x4 Keypad
@@ -86,10 +85,12 @@ char scan_keypad() {
 }
 
 bool is_num(char key) {
-  if (key == '0' || key == '1' || key == '2' || key == '3' || key == '4')
+  if (key == '0' || key == '1' || key == '2' || key == '3' || key == '4') {
     return true;
-  if (key == '5' || key == '6' || key == '7' || key =='8' || key == '9')
+  }
+  if (key == '5' || key == '6' || key == '7' || key == '8' || key == '9') {
     return true;
+  }
   return false;
 }
 
@@ -128,16 +129,18 @@ void setup() {
 void loop() {
     char key = scan_keypad();
     if (key == 'A' or key == 'B') {
-      print_centered(key, BOTTOM);
+      print_centered(String(key), BOTTOM);
       delay(500);
       prepare_game();
 
       // Math Game
-      if (key == 'A')
+      if (key == 'A') {
         math_main();
+      }
       // Music Game
-      else if (key == 'B')
+      else if (key == 'B') {
         music_main();
+      }
     }
     delay(100); // Delay for a while before scanning again
 }
