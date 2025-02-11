@@ -22,11 +22,11 @@ int pin_rows[KEYPAD_NUM_ROWS] = {21, 20, 19, 18};
 int pin_columns[KEYPAD_NUM_COLS] = {10, 11, 8, 9};
 
 void lcd_init() {
-  Wire.begin();
-  lcd.begin(Wire);
-  lcd.setBacklight(255, 255, 255);
-  lcd.setContrast(5);
-  lcd.setCursor(0, 0);
+  Wire.begin(SDA, SCL); // Start I2C with SDA on pin 6 and SCL on pin 7
+  lcd.begin(Wire); // Initialize LCD over I2C
+  lcd.setBacklight(255, 255, 255); // Set the backlight to white
+  lcd.setContrast(5); // Set contrast level (adjust as needed)
+  lcd.setCursor(0, 0); // Start at the top left of the LCD
 }
 
 void clear_lcd() {
@@ -40,7 +40,7 @@ void print_centered(String message, int row) {
   } else {
     lcd.setCursor(0, row);
   }
-  Serial.print(message);
+  lcd.print(message);
 }
 
 void center_cursor(int row) {
@@ -110,20 +110,25 @@ void prepare_game() {
   print_centered("*: del, #: esc", TOP);
   print_centered("Button submits.", BOTTOM);
   delay(4000);
+  clear_lcd();
 }
 
 void initial_output() {
-  String opening_str = "Math (A) or Music (B)?";
-  print_centered(opening_str, TOP);
-  center_cursor(BOTTOM);
+  String opening_str_top = "Math (A) or";
+  String opening_str_bottom = "Music (B)? ";
+  print_centered(opening_str_top, TOP);
+  lcd.setCursor(0, 1);
+  lcd.print(opening_str_bottom);
+  lcd.cursor();
 }
 
 void setup() {
     // Initialize devices
     lcd_init();
     keypad_init();
-    Serial.begin(9600);
     initial_output();
+    Serial.begin(9600);
+    Serial.println("Initialization complete!");
 }
 
 void loop() {
@@ -136,10 +141,12 @@ void loop() {
       // Math Game
       if (key == 'A') {
         math_main();
+        Serial.println("Math game loading...");
       }
       // Music Game
       else if (key == 'B') {
         music_main();
+        Serial.println("Music game loading...");
       }
     }
     delay(100); // Delay for a while before scanning again

@@ -36,10 +36,18 @@ void math_main() {
 
     // Calculate answer and wait for user input.
     question = String(num1) + ' ' + op + ' ' + String(num2);
+    Serial.print("Question: ");
+    Serial.println(question);
     print_centered(question, TOP);
+
     int answer = calculate_answer(num1, op, num2);
+    Serial.print("Answer: ");
+    Serial.println(answer);
+
     center_cursor(BOTTOM);
     int response = process_input_math();
+    Serial.print("User Response: ");
+    Serial.println(response);
 
     // Exit
     if (response == -1) {

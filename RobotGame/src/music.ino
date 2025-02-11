@@ -31,7 +31,12 @@ void music_main() {
     String question_bottom = "using the sensor.";
     print_centered(question_top, TOP);
     print_centered(question_bottom, BOTTOM);
+    Serial.print("Note: ");
+    Serial.println(note);
+
     char response = process_input_music();
+    Serial.print("User Reponse: ");
+    Serial.println(response);
 
     // Exit
     if (response == '#') {
