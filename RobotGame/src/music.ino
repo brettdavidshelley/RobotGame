@@ -2,6 +2,13 @@
 #include <Ultrasonic.h>
 
 AlmostRandom MUSIC_RANDOM = AlmostRandom();
+
+#define TRIG             13
+#define ECHO             14
+#define MIN_CM           0
+#define MAX_CM           76
+#define MIN_HZ           31
+#define MAX_HZ           65535
 Ultrasonic ultrasonic(TRIG, ECHO);
 int sensor_distance;
 
@@ -9,6 +16,9 @@ void music_main() {
   while (1) {
     // Generate random numbers
     byte note_byte = MUSIC_RANDOM.getRandomByte();
+    if (note_byte < 0) {
+      note_byte *= -1;
+    }
     char note = 'A';
 
     // Equal chance of A, B, C, D, E, F, or G
@@ -57,6 +67,7 @@ void music_main() {
 }
 
 char process_input_music() {
+  int selected_freq;
   char selected_note;
   char key;
 
@@ -69,20 +80,29 @@ char process_input_music() {
 
     // Read sensor distance in cm.
     sensor_distance = ultrasonic.read();
-    if (sensor_distance <= 400) {
-      selected_note = cm_to_note(sensor_distance);
+    if (sensor_distance <= MAX_CM) {
+      selected_freq = cm_to_freq(sensor_distance);
+      selected_note = freq_to_note(selected_freq);
+      tone(SPEAKER, selected_freq);
     }
 
     // If an answer has been submitted, return.
     if (digitalRead(BUTTON) == HIGH) {
+      delay(100);
+      noTone(SPEAKER);
       break;
     }
-    delay(200);
+    delay(100);
   }
   return selected_note;
 }
 
-char cm_to_note(int cm) {
-  // TODO: Implement logic to relate distance in centimeters to the note being buzzed by the speaker.
+int cm_to_freq(int cm) {
+  int multiplier = (int) ((MAX_HZ - MIN_HZ) / (MAX_CM - MIN_CM));
+  return cm * multiplier + MIN_HZ;
+}
+
+char freq_to_note(int freq) {
+  // TODO: Implement logic to relate frequency to the note being buzzed by the speaker.
   return 'A';
 }

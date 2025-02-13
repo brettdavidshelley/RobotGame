@@ -26,8 +26,15 @@ void math_main() {
       scaledown = 328;
     }
     int num1 = MATH_RANDOM.getRandomInt() / scaledown;
+    if (num1 < 0) {
+      num1 *= -1;
+    }
     int num2 = MATH_RANDOM.getRandomInt() / scaledown;
-
+    if (num2 < 0) {
+      num2 *= -1;
+    }
+    
+    // No negative answers
     if (op == '-' && num1 < num2) {
       int temp = num1;
       num1 = num2;

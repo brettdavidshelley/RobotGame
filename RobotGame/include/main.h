@@ -4,8 +4,6 @@
 
 // TODO: Determine actual BUTTON, TRIG, and ECHO pins.
 #define BUTTON 12
-#define TRIG   13
-#define ECHO   14
 
 void initial_output(void);
 void clear_lcd(void);

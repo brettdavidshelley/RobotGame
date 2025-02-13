@@ -4,9 +4,21 @@
 #include "games.h"
 #include "global.h"
 
+
+#define INCORRECT        0
+#define CORRECT          1
+
+// Servos & Speaker
+#define PWM_PER_DEG      255 / 180
+#define NO_SERVO         15
+#define YES_SERVO        16
+#define TONE_DURATION    1200
+
 // 16x2 LCD
 #define LCD_NUM_ROWS     2
 #define LCD_NUM_COLS     16
+#define SCL              7
+#define SDA              6
 SerLCD lcd;
 
 // 4x4 Keypad
@@ -21,22 +33,29 @@ char keys[KEYPAD_NUM_ROWS][KEYPAD_NUM_COLS] = {
 int pin_rows[KEYPAD_NUM_ROWS] = {21, 20, 19, 18};
 int pin_columns[KEYPAD_NUM_COLS] = {10, 11, 8, 9};
 
+void init_output_devices() {
+  pinMode(NO_SERVO, OUTPUT);
+  pinMode(YES_SERVO, OUTPUT);
+  pinMode(SPEAKER, OUTPUT);
+}
+
 void lcd_init() {
   Wire.begin(SDA, SCL); // Start I2C with SDA on pin 6 and SCL on pin 7
   lcd.begin(Wire); // Initialize LCD over I2C
   lcd.setBacklight(255, 255, 255); // Set the backlight to white
   lcd.setContrast(5); // Set contrast level (adjust as needed)
+  clear_lcd();
   lcd.setCursor(0, 0); // Start at the top left of the LCD
 }
 
 void clear_lcd() {
   lcd.clear();
-  delay(200);
+  delay(100);
 }
 
 void print_centered(String message, int row) {
-  if (message.length() < 16) {
-    lcd.setCursor((16 - message.length()) >> 1, row);
+  if (message.length() < LCD_NUM_COLS) {
+    lcd.setCursor((LCD_NUM_COLS - message.length()) >> 1, row);
   } else {
     lcd.setCursor(0, row);
   }
@@ -44,7 +63,7 @@ void print_centered(String message, int row) {
 }
 
 void center_cursor(int row) {
-  lcd.setCursor(7, row);
+  lcd.setCursor((LCD_NUM_COLS - 1) / 2, row);
   lcd.cursor();
 }
 
@@ -94,22 +113,46 @@ bool is_num(char key) {
   return false;
 }
 
-// TODO: Implement logic for correct/incorrect answers.
+void nod(int correctness) {
+  int pos;
+  int servo_pin;
+  int servo_delay = 20;
+  if (correctness == CORRECT) {
+    servo_pin = YES_SERVO;
+  } else {
+    servo_pin = NO_SERVO;
+  }
+  for (int i = 0; i < 2; i++) {
+    for (pos = 0; pos <= PWM_PER_DEG * 180; pos += PWM_PER_DEG) {
+      analogWrite(servo_pin, (int) pos);
+      delay(servo_delay);
+    }
+    for (pos = PWM_PER_DEG * 180; pos >= 0; pos -= PWM_PER_DEG) {
+      analogWrite(servo_pin, (int) pos);
+      delay(servo_delay);
+    }
+  }
+}
+
 void correct() {
-  // Implement the code to buzz speaker with correct noise and nod yes.
-  return;
+  int correct_freq = 1000;
+  tone(SPEAKER, correct_freq, TONE_DURATION);
+  nod(CORRECT);
+  delay(200);
 }
 
 void incorrect() {
-  // Implement the code to buzz speaker with incorrect noise and nod no.
-  return;
+  int incorrect_freq = 500;
+  tone(SPEAKER, incorrect_freq, TONE_DURATION);
+  nod(INCORRECT);
+  delay(200);
 }
 
 void prepare_game() {
   clear_lcd();
   print_centered("*: del, #: esc", TOP);
   print_centered("Button submits.", BOTTOM);
-  delay(4000);
+  delay(5000);
   clear_lcd();
 }
 
@@ -126,15 +169,17 @@ void setup() {
     // Initialize devices
     lcd_init();
     keypad_init();
+    init_output_devices();
     initial_output();
     Serial.begin(9600);
+    while (!Serial);
     Serial.println("Initialization complete!");
 }
 
 void loop() {
     char key = scan_keypad();
     if (key == 'A' or key == 'B') {
-      print_centered(String(key), BOTTOM);
+      lcd.print(String(key));
       delay(500);
       prepare_game();
 
@@ -149,5 +194,5 @@ void loop() {
         Serial.println("Music game loading...");
       }
     }
-    delay(100); // Delay for a while before scanning again
+    delay(100);
 }
