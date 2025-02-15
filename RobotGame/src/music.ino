@@ -3,8 +3,8 @@
 
 AlmostRandom MUSIC_RANDOM = AlmostRandom();
 
-#define TRIG             13
-#define ECHO             14
+#define TRIG             4
+#define ECHO             5
 #define MIN_CM           0
 #define MAX_CM           76
 #define MIN_HZ           31
@@ -14,6 +14,8 @@ int sensor_distance;
 
 void music_main() {
   while (1) {
+    clear_lcd();
+
     // Generate random numbers
     byte note_byte = MUSIC_RANDOM.getRandomByte();
     if (note_byte < 0) {
@@ -37,8 +39,8 @@ void music_main() {
     }
 
     // Calculate answer and wait for user input.
-    String question_top = "Select note " + note;
-    String question_bottom = "using the sensor.";
+    String question_top = "Select note: " + String(note);
+    String question_bottom = "with the sensor.";
     print_centered(question_top, TOP);
     print_centered(question_bottom, BOTTOM);
     Serial.print("Note: ");
@@ -50,7 +52,6 @@ void music_main() {
 
     // Exit
     if (response == '#') {
-      clear_lcd();
       initial_output();
       return;
     }
@@ -62,7 +63,6 @@ void music_main() {
     else {
       incorrect();
     }
-    clear_lcd();
   }
 }
 

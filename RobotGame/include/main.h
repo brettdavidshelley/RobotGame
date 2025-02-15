@@ -2,8 +2,7 @@
 #include <AlmostRandom.h>
 #include "global.h"
 
-// TODO: Determine actual BUTTON, TRIG, and ECHO pins.
-#define BUTTON 12
+#define BUTTON           12
 
 void initial_output(void);
 void clear_lcd(void);

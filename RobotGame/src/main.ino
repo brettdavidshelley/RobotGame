@@ -10,8 +10,8 @@
 
 // Servos & Speaker
 #define PWM_PER_DEG      255 / 180
-#define NO_SERVO         15
-#define YES_SERVO        16
+#define NO_SERVO         22
+#define YES_SERVO        23
 #define TONE_DURATION    1200
 
 // 16x2 LCD
@@ -40,17 +40,17 @@ void init_output_devices() {
 }
 
 void lcd_init() {
-  Wire.begin(SDA, SCL); // Start I2C with SDA on pin 6 and SCL on pin 7
-  lcd.begin(Wire); // Initialize LCD over I2C
-  lcd.setBacklight(255, 255, 255); // Set the backlight to white
-  lcd.setContrast(5); // Set contrast level (adjust as needed)
+  // Initialize LCD over I2C.
+  Wire.begin(SDA, SCL);
+  lcd.begin(Wire);
+  lcd.setBacklight(255, 255, 255);
   clear_lcd();
-  lcd.setCursor(0, 0); // Start at the top left of the LCD
+  lcd.setCursor(0, 0);
 }
 
 void clear_lcd() {
   lcd.clear();
-  delay(100);
+  delay(50);
 }
 
 void print_centered(String message, int row) {
@@ -67,40 +67,40 @@ void center_cursor(int row) {
   lcd.cursor();
 }
 
-// Function to initialize GPIOs for the keypad
+// Initialize pins for the keypad.
 void keypad_init() {
     for (int i = 0; i < KEYPAD_NUM_ROWS; i++) {
-        pinMode(pin_rows[i], INPUT_PULLUP);  // Enable internal pull-up resistors
+        // Enable internal pull-up resistors
+        pinMode(pin_rows[i], INPUT_PULLUP);
     }
     for (int i = 0; i < KEYPAD_NUM_COLS; i++) {
-        pinMode(pin_columns[i], OUTPUT);  // Set columns as output
-        digitalWrite(pin_columns[i], HIGH);  // Set columns to high initially
+        pinMode(pin_columns[i], OUTPUT);
+        digitalWrite(pin_columns[i], HIGH);
     }
 }
 
 // Function to scan the keypad and return the key pressed
 char scan_keypad() {
     for (int col = 0; col < KEYPAD_NUM_COLS; col++) {
-        // Set all columns to HIGH first
+        // Set all columns to HIGH first.
         for (int i = 0; i < KEYPAD_NUM_COLS; i++) {
             digitalWrite(pin_columns[i], HIGH);
         }
-
-        // Set the current column to LOW
+        // Set the current column to LOW.
         digitalWrite(pin_columns[col], LOW);
-
-        // Check for keypress on each row
+        // Check for keypress on each row.
         for (int row = 0; row < KEYPAD_NUM_ROWS; row++) {
-            if (digitalRead(pin_rows[row]) == LOW) { // If row is LOW, key is pressed
-                // Wait until the key is released
+            // Key pressed
+            if (digitalRead(pin_rows[row]) == LOW) {
+                // Wait until the key is released.
                 while (digitalRead(pin_rows[row]) == LOW) {
                     delay(10);
                 }
-                return keys[row][col]; // Return the key pressed
+                return keys[row][col];
             }
         }
     }
-    return '\0'; // No key pressed
+    return '\0';
 }
 
 bool is_num(char key) {
@@ -135,30 +135,37 @@ void nod(int correctness) {
 }
 
 void correct() {
+  // TODO: REMOVE LATER
+  return;
+
   int correct_freq = 1000;
   tone(SPEAKER, correct_freq, TONE_DURATION);
   nod(CORRECT);
-  delay(200);
+  delay(50);
 }
 
 void incorrect() {
+  // TODO: REMOVE LATER
+  return;
+
   int incorrect_freq = 500;
   tone(SPEAKER, incorrect_freq, TONE_DURATION);
   nod(INCORRECT);
-  delay(200);
+  delay(50);
 }
 
 void prepare_game() {
   clear_lcd();
   print_centered("*: del, #: esc", TOP);
   print_centered("Button submits.", BOTTOM);
-  delay(5000);
+  // TODO: LENGTHEN TO 5000 LATER
+  delay(500);
   clear_lcd();
 }
 
 void initial_output() {
   String opening_str_top = "Math (A) or";
-  String opening_str_bottom = "Music (B)? ";
+  String opening_str_bottom = " Music (B)? ";
   print_centered(opening_str_top, TOP);
   lcd.setCursor(0, 1);
   lcd.print(opening_str_bottom);
@@ -166,7 +173,7 @@ void initial_output() {
 }
 
 void setup() {
-    // Initialize devices
+    // Initialize devices.
     lcd_init();
     keypad_init();
     init_output_devices();
@@ -185,13 +192,13 @@ void loop() {
 
       // Math Game
       if (key == 'A') {
-        math_main();
         Serial.println("Math game loading...");
+        math_main();
       }
       // Music Game
       else if (key == 'B') {
-        music_main();
         Serial.println("Music game loading...");
+        music_main();
       }
     }
     delay(100);

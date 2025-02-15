@@ -2,6 +2,7 @@
 
 AlmostRandom MATH_RANDOM = AlmostRandom();
 String question;
+int answer;
 
 void math_main() {
   while (1) {
@@ -47,7 +48,7 @@ void math_main() {
     Serial.println(question);
     print_centered(question, TOP);
 
-    int answer = calculate_answer(num1, op, num2);
+    answer = calculate_answer(num1, op, num2);
     Serial.print("Answer: ");
     Serial.println(answer);
 
@@ -65,9 +66,11 @@ void math_main() {
 
     // Compare answer and response
     if (response == answer) {
+      Serial.println("Correct!");
       correct();
     }
     else {
+      Serial.println("Incorrect!");
       incorrect();
     }
     clear_lcd();
@@ -75,10 +78,7 @@ void math_main() {
 }
 
 bool valid_input(char key) {
-  if (is_num(key) || key == '*') {
-    return true;
-  }
-  return false;
+  return (is_num(key) || key == '*' || key == '#');
 }
 
 int process_input_math() {
@@ -96,34 +96,42 @@ int process_input_math() {
         submitted = true;
         break;
       }
-    } while (key == '\0');
+    } while (!valid_input(key));
 
-    if (valid_input(key)) {
-      // Append the input to the response.
-      if (is_num(key)) {
-        response += String(key);
-      }
-
-      // Backspace
-      else if (key == '*') {
-        response.remove(strlen(response.c_str()) - 1);
-      }
-      
-      // Show current response on bottom row.
-      clear_lcd();
-      print_centered(question, TOP);
-      print_centered(response, BOTTOM);
-    }
     // If an answer has been submitted or an exit has been requested, break the loop.
     if (submitted || key == '#') {
       break;
     }
+
+    // Do nothing if a backspace has been requested with an empty string.
+    if (key == '*' && strlen(response.c_str()) <= 0) {
+      continue;
+    }
+
+    // Append the input to the response.
+    if (is_num(key)) {
+      response += String(key);
+    }
+    // Backspace
+    else if (key == '*' && strlen(response.c_str()) > 0) {
+      response.remove(strlen(response.c_str()) - 1);
+    }
+
+    // Show current response on bottom row.
+    clear_lcd();
+    print_centered(question, TOP);
+    print_centered(response, BOTTOM);
   }
   // Return
   if (key == '#') {
     return -1;
   } else if (response == "") {
-    return 0;
+    // Ensure a blank response is incorrect.
+    if (answer == 0) {
+      return 1;
+    } else {
+      return 0;
+    }
   } else {
     return response.toInt();
   }
