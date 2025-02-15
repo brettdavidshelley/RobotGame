@@ -65,11 +65,9 @@ void math_main() {
 
     // Compare answer and response
     if (response == answer) {
-      Serial.println("Correct!");
       correct();
     }
     else {
-      Serial.println("Incorrect!");
       incorrect();
     }
     clear_lcd();

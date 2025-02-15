@@ -69,8 +69,10 @@ void center_cursor(int row) {
   lcd.cursor();
 }
 
-// Initialize pins for the keypad.
+// Initialize pins for the keypad and the button.
 void keypad_init() {
+    pinMode(BUTTON, INPUT);
+
     for (int i = 0; i < KEYPAD_NUM_ROWS; i++) {
         // Enable internal pull-up resistors
         pinMode(pin_rows[i], INPUT_PULLUP);
@@ -136,8 +138,16 @@ void nod(int correctness) {
   }
 }
 
-void correct() {
+void print_correctness(String correctness_str) {
+  Serial.println(correctness_str);
+  clear_lcd();
+  print_centered(correctness_str, TOP);
   questions_answered += 1;
+  delay(1000);
+}
+
+void correct() {
+  print_correctness("Correct!");
   score += 1;
   // TODO: REMOVE LATER
   return;
@@ -149,7 +159,7 @@ void correct() {
 }
 
 void incorrect() {
-  questions_answered += 1;
+  print_correctness("Incorrect!");
   // TODO: REMOVE LATER
   return;
 
@@ -170,18 +180,18 @@ void prepare_game() {
 
 void initial_output() {
   String opening_str_top = "Math (A) or";
-  String opening_str_bottom = " Music (B)? ";
+  String opening_str_bottom = "Music (B)? ";
   print_centered(opening_str_top, TOP);
-  lcd.setCursor(0, 1);
+  lcd.setCursor(1, 1);
   lcd.print(opening_str_bottom);
   lcd.cursor();
 }
 
 void display_results() {
   // Calculate accuracy.
-  double accuracy = 0.0;
+  int accuracy = 0;
   if (score > 0) {
-    accuracy = (score * 1.0 / questions_answered) * 10 / 10.0;
+    accuracy = score * 100 / questions_answered;
   }
   String acc_str = "Accuracy: " + String(accuracy) + "%";
 
@@ -200,7 +210,7 @@ void display_results() {
   questions_answered = 0;
 
   // Enter the main loop again.
-  // TODO: LENGTHEN TO 8000 LATER
+  // TODO: LENGTHEN TO 5000 LATER
   delay(2000);
   clear_lcd();
   initial_output();

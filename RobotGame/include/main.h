@@ -2,8 +2,6 @@
 #include <AlmostRandom.h>
 #include "global.h"
 
-#define BUTTON           2
-
 void initial_output(void);
 void clear_lcd(void);
 char scan_keypad(void);
