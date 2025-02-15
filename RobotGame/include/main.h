@@ -2,7 +2,7 @@
 #include <AlmostRandom.h>
 #include "global.h"
 
-#define BUTTON           12
+#define BUTTON           2
 
 void initial_output(void);
 void clear_lcd(void);

@@ -60,7 +60,6 @@ void math_main() {
     // Exit
     if (response == -1) {
       clear_lcd();
-      initial_output();
       return;
     }
 

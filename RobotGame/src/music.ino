@@ -52,7 +52,7 @@ void music_main() {
 
     // Exit
     if (response == '#') {
-      initial_output();
+      clear_lcd();
       return;
     }
 

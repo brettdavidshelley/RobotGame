@@ -4,9 +4,11 @@
 #include "games.h"
 #include "global.h"
 
-
+// Results tracking
 #define INCORRECT        0
 #define CORRECT          1
+int questions_answered;
+int score;
 
 // Servos & Speaker
 #define PWM_PER_DEG      255 / 180
@@ -135,6 +137,8 @@ void nod(int correctness) {
 }
 
 void correct() {
+  questions_answered += 1;
+  score += 1;
   // TODO: REMOVE LATER
   return;
 
@@ -145,6 +149,7 @@ void correct() {
 }
 
 void incorrect() {
+  questions_answered += 1;
   // TODO: REMOVE LATER
   return;
 
@@ -170,6 +175,35 @@ void initial_output() {
   lcd.setCursor(0, 1);
   lcd.print(opening_str_bottom);
   lcd.cursor();
+}
+
+void display_results() {
+  // Calculate accuracy.
+  double accuracy = 0.0;
+  if (score > 0) {
+    accuracy = (score * 1.0 / questions_answered) * 10 / 10.0;
+  }
+  String acc_str = "Accuracy: " + String(accuracy) + "%";
+
+  // Print the results to the console.
+  Serial.println("Questions answered: " + String(questions_answered));
+  Serial.println("Questions correct: " + String(score));
+  Serial.println(acc_str);
+
+  // Show results of the game.
+  String results_str_top = "Score: " + String(score);
+  print_centered(results_str_top, TOP);
+  print_centered(acc_str, BOTTOM);
+
+  // Reset counters.
+  score = 0;
+  questions_answered = 0;
+
+  // Enter the main loop again.
+  // TODO: LENGTHEN TO 8000 LATER
+  delay(2000);
+  clear_lcd();
+  initial_output();
 }
 
 void setup() {
@@ -200,6 +234,7 @@ void loop() {
         Serial.println("Music game loading...");
         music_main();
       }
+      display_results();
     }
     delay(100);
 }
