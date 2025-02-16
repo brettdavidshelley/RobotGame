@@ -35,7 +35,10 @@ char keys[KEYPAD_NUM_ROWS][KEYPAD_NUM_COLS] = {
 int pin_rows[KEYPAD_NUM_ROWS] = {21, 20, 19, 18};
 int pin_columns[KEYPAD_NUM_COLS] = {10, 11, 8, 9};
 
-void init_output_devices() {
+void init_devices() {
+  lcd_init();
+  keypad_init();
+  pinMode(BUTTON, INPUT);
   pinMode(NO_SERVO, OUTPUT);
   pinMode(YES_SERVO, OUTPUT);
   pinMode(SPEAKER, OUTPUT);
@@ -71,8 +74,6 @@ void center_cursor(int row) {
 
 // Initialize pins for the keypad and the button.
 void keypad_init() {
-    pinMode(BUTTON, INPUT);
-
     for (int i = 0; i < KEYPAD_NUM_ROWS; i++) {
         // Enable internal pull-up resistors
         pinMode(pin_rows[i], INPUT_PULLUP);
@@ -108,13 +109,7 @@ char scan_keypad() {
 }
 
 bool is_num(char key) {
-  if (key == '0' || key == '1' || key == '2' || key == '3' || key == '4') {
-    return true;
-  }
-  if (key == '5' || key == '6' || key == '7' || key == '8' || key == '9') {
-    return true;
-  }
-  return false;
+  return (key >= 48 && key <= 57);
 }
 
 void nod(int correctness) {
@@ -155,7 +150,6 @@ void correct() {
   int correct_freq = 1000;
   tone(SPEAKER, correct_freq, TONE_DURATION);
   nod(CORRECT);
-  delay(50);
 }
 
 void incorrect() {
@@ -166,10 +160,9 @@ void incorrect() {
   int incorrect_freq = 500;
   tone(SPEAKER, incorrect_freq, TONE_DURATION);
   nod(INCORRECT);
-  delay(50);
 }
 
-void prepare_game() {
+void loading_screen() {
   clear_lcd();
   print_centered("*: del, #: esc", TOP);
   print_centered("Button submits.", BOTTOM);
@@ -179,6 +172,7 @@ void prepare_game() {
 }
 
 void initial_output() {
+  // Main loop LCD output
   String opening_str_top = "Math (A) or";
   String opening_str_bottom = "Music (B)? ";
   print_centered(opening_str_top, TOP);
@@ -196,6 +190,7 @@ void display_results() {
   String acc_str = "Accuracy: " + String(accuracy) + "%";
 
   // Print the results to the console.
+  Serial.println("\nResults");
   Serial.println("Questions answered: " + String(questions_answered));
   Serial.println("Questions correct: " + String(score));
   Serial.println(acc_str);
@@ -218,9 +213,7 @@ void display_results() {
 
 void setup() {
     // Initialize devices.
-    lcd_init();
-    keypad_init();
-    init_output_devices();
+    init_devices();
     initial_output();
     Serial.begin(9600);
     while (!Serial);
@@ -232,7 +225,7 @@ void loop() {
     if (key == 'A' or key == 'B') {
       lcd.print(String(key));
       delay(500);
-      prepare_game();
+      loading_screen();
 
       // Math Game
       if (key == 'A') {
