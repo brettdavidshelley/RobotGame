@@ -135,6 +135,7 @@ void nod(int correctness) {
 
 void print_correctness(String correctness_str) {
   Serial.println(correctness_str);
+  lcd.noCursor();
   clear_lcd();
   print_centered(correctness_str, TOP);
   questions_answered += 1;
