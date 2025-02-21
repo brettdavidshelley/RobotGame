@@ -1,5 +1,4 @@
 #include "main.h"
-#include <cmath>
 #include <Ultrasonic.h>
 
 AlmostRandom MUSIC_RANDOM = AlmostRandom();
@@ -7,10 +6,10 @@ AlmostRandom MUSIC_RANDOM = AlmostRandom();
 // Ultrasonic Sensor
 #define TRIG             4
 #define ECHO             5
-#define MIN_CM           0
-#define MAX_CM           76
+#define MIN_CM           5
+#define MAX_CM           45
 #define MIN_HZ           31
-#define MAX_HZ           32767
+#define MAX_HZ           5000
 Ultrasonic ultrasonic(TRIG, ECHO);
 int sensor_distance;
 
@@ -59,17 +58,18 @@ void music_main() {
     Serial.println(note);
 
     // Debug block
-    // int sensor_distance = MUSIC_RANDOM.getRandomInt() / 430;
+    // int sensor_distance = MUSIC_RANDOM.getRandomInt() / (32768 / (MAX_CM - MIN_CM));
     // if (sensor_distance < 0) {
     //   sensor_distance *= -1;
     // }
+    // sensor_distance += MIN_CM;
     // int selected_freq = cm_to_freq(sensor_distance);
     // char selected_note = freq_to_note(selected_freq);
     // Serial.println("Sensor Distance: " + String(sensor_distance) + "cm");
     // Serial.println("Selected Frequency: " + String(selected_freq) + "Hz");
     // Serial.println("Selected Note: " + String(selected_note));
     // Serial.println(note == selected_note ? "Correct!\n" : "Incorrect!\n");
-    // delay(250);
+    // play_tone(selected_freq, 2000);
     // continue;
 
     char response = process_input_music();
@@ -113,13 +113,13 @@ char process_input_music() {
     if (valid_distance(sensor_distance)) {
       selected_freq = cm_to_freq(sensor_distance);
       selected_note = freq_to_note(selected_freq);
-      tone(SPEAKER, selected_freq);
+      play_tone(selected_freq, 100);
     }
 
     // If an answer has been submitted, return.
     if (digitalRead(BUTTON) == HIGH) {
       delay(100);
-      noTone(SPEAKER);
+      i2s_stop(I2S_NUM);
       break;
     }
     delay(100);

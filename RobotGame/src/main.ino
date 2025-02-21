@@ -14,7 +14,7 @@ int score;
 #define PWM_PER_DEG      255 / 180
 #define NO_SERVO         22
 #define YES_SERVO        23
-#define TONE_DURATION    1200
+#define TONE_DURATION    1000
 
 // 16x2 LCD
 #define LCD_NUM_ROWS     2
@@ -38,10 +38,38 @@ int pin_columns[KEYPAD_NUM_COLS] = {10, 11, 8, 9};
 void init_devices() {
   lcd_init();
   keypad_init();
+  i2s_speaker_init();
   pinMode(BUTTON, INPUT);
   pinMode(NO_SERVO, OUTPUT);
   pinMode(YES_SERVO, OUTPUT);
-  pinMode(SPEAKER, OUTPUT);
+  // pinMode(SPEAKER, OUTPUT);
+}
+
+void i2s_speaker_init() {
+  // Configure I2S
+  i2s_config_t i2s_config = {
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+    .sample_rate = 44100,
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+    .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+    .communication_format = I2S_COMM_FORMAT_I2S_MSB,
+    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+    .dma_buf_count = 8,
+    .dma_buf_len = 64,
+    .use_apll = false
+  };
+  
+  // Install and start I2S driver
+  i2s_driver_install(I2S_NUM, &i2s_config, 0, NULL);
+
+  // Configure I2S pins
+  i2s_pin_config_t pin_config = {
+    .bck_io_num = I2S_BCK_PIN,
+    .ws_io_num = I2S_LRCK_PIN,
+    .data_out_num = I2S_DATA_PIN,
+    .data_in_num = I2S_PIN_NO_CHANGE
+  };
+  i2s_set_pin(I2S_NUM, &pin_config);
 }
 
 void lcd_init() {
@@ -112,6 +140,26 @@ bool is_num(char key) {
   return (key >= 48 && key <= 57);
 }
 
+void play_tone(int frequency, int duration) {
+  size_t bytes_written;
+  const int sample_rate = 44100; // Hz
+  const int samples_per_cycle = sample_rate / frequency;
+  const int amplitude = 8000;
+
+  int16_t samples[samples_per_cycle];
+  for (int i = 0; i < samples_per_cycle; i++) {
+    samples[i] = amplitude * sin(2 * PI * i / samples_per_cycle);
+  }
+
+  // Calculate how many cycles to play for the given duration
+  int cycles = (duration / 1000.0) * frequency;
+  i2s_start(I2S_NUM);
+  for (int c = 0; c < cycles; c++) {
+    i2s_write(I2S_NUM, samples, sizeof(samples), &bytes_written, portMAX_DELAY);
+  }
+  i2s_stop(I2S_NUM);
+}
+
 void nod(int correctness) {
   int pos;
   int servo_pin;
@@ -145,21 +193,21 @@ void print_correctness(String correctness_str) {
 void correct() {
   print_correctness("Correct!");
   score += 1;
+  int correct_freq = 1800;
+  play_tone(correct_freq, TONE_DURATION);
   // TODO: REMOVE LATER
   return;
 
-  int correct_freq = 1000;
-  tone(SPEAKER, correct_freq, TONE_DURATION);
   nod(CORRECT);
 }
 
 void incorrect() {
   print_correctness("Incorrect!");
+  int incorrect_freq = 500;
+  play_tone(incorrect_freq, TONE_DURATION);
   // TODO: REMOVE LATER
   return;
 
-  int incorrect_freq = 500;
-  tone(SPEAKER, incorrect_freq, TONE_DURATION);
   nod(INCORRECT);
 }
 
