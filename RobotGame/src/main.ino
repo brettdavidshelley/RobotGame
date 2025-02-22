@@ -193,8 +193,7 @@ void print_correctness(String correctness_str) {
 void correct() {
   print_correctness("Correct!");
   score += 1;
-  int correct_freq = 1800;
-  play_tone(correct_freq, TONE_DURATION);
+  play_tone(1800, TONE_DURATION);
   // TODO: REMOVE LATER
   return;
 
@@ -203,8 +202,7 @@ void correct() {
 
 void incorrect() {
   print_correctness("Incorrect!");
-  int incorrect_freq = 500;
-  play_tone(incorrect_freq, TONE_DURATION);
+  play_tone(500, TONE_DURATION);
   // TODO: REMOVE LATER
   return;
 
@@ -215,8 +213,9 @@ void loading_screen() {
   clear_lcd();
   print_centered("*: del, #: esc", TOP);
   print_centered("Button submits.", BOTTOM);
+  lcd.noCursor();
   // TODO: LENGTHEN TO 5000 LATER
-  delay(500);
+  delay(2000);
   clear_lcd();
 }
 
@@ -248,6 +247,7 @@ void display_results() {
   String results_str_top = "Score: " + String(score);
   print_centered(results_str_top, TOP);
   print_centered(acc_str, BOTTOM);
+  lcd.noCursor();
 
   // Reset counters.
   score = 0;
