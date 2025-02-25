@@ -99,12 +99,10 @@ int process_input_math() {
     if (submitted || key == '#') {
       break;
     }
-
     // Do nothing if a backspace has been requested with an empty string.
     if (key == '*' && strlen(response.c_str()) <= 0) {
       continue;
     }
-
     // Append the input to the response.
     if (is_num(key)) {
       response += String(key);
@@ -113,7 +111,6 @@ int process_input_math() {
     else if (key == '*' && strlen(response.c_str()) > 0) {
       response.remove(strlen(response.c_str()) - 1);
     }
-
     // Show current response on bottom row.
     clear_lcd();
     print_centered(question, TOP);

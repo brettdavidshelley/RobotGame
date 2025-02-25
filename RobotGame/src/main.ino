@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SerLCD.h>
+#include <Adafruit_SoftServo.h>
 #include "games.h"
 #include "global.h"
 
@@ -11,10 +12,11 @@ int questions_answered;
 int score;
 
 // Servos & Speaker
-#define PWM_PER_DEG      255 / 180
 #define NO_SERVO         22
 #define YES_SERVO        23
 #define TONE_DURATION    1000
+Adafruit_SoftServo yes_servo;
+Adafruit_SoftServo no_servo;
 
 // 16x2 LCD
 #define LCD_NUM_ROWS     2
@@ -38,11 +40,19 @@ int pin_columns[KEYPAD_NUM_COLS] = {10, 11, 8, 9};
 void init_devices() {
   lcd_init();
   keypad_init();
+  servos_init();
   i2s_speaker_init();
   pinMode(BUTTON, INPUT);
+}
+
+void servos_init() {
   pinMode(NO_SERVO, OUTPUT);
   pinMode(YES_SERVO, OUTPUT);
-  // pinMode(SPEAKER, OUTPUT);
+  yes_servo.attach(YES_SERVO);
+  no_servo.attach(NO_SERVO);
+  yes_servo.write(0);
+  no_servo.write(0); 
+  delay(10);
 }
 
 void i2s_speaker_init() {
@@ -102,38 +112,38 @@ void center_cursor(int row) {
 
 // Initialize pins for the keypad and the button.
 void keypad_init() {
-    for (int i = 0; i < KEYPAD_NUM_ROWS; i++) {
-        // Enable internal pull-up resistors
-        pinMode(pin_rows[i], INPUT_PULLUP);
-    }
-    for (int i = 0; i < KEYPAD_NUM_COLS; i++) {
-        pinMode(pin_columns[i], OUTPUT);
-        digitalWrite(pin_columns[i], HIGH);
-    }
+  for (int i = 0; i < KEYPAD_NUM_ROWS; i++) {
+    // Enable internal pull-up resistors
+    pinMode(pin_rows[i], INPUT_PULLUP);
+  }
+  for (int i = 0; i < KEYPAD_NUM_COLS; i++) {
+    pinMode(pin_columns[i], OUTPUT);
+    digitalWrite(pin_columns[i], HIGH);
+  }
 }
 
 // Function to scan the keypad and return the key pressed
 char scan_keypad() {
-    for (int col = 0; col < KEYPAD_NUM_COLS; col++) {
-        // Set all columns to HIGH first.
-        for (int i = 0; i < KEYPAD_NUM_COLS; i++) {
-            digitalWrite(pin_columns[i], HIGH);
-        }
-        // Set the current column to LOW.
-        digitalWrite(pin_columns[col], LOW);
-        // Check for keypress on each row.
-        for (int row = 0; row < KEYPAD_NUM_ROWS; row++) {
-            // Key pressed
-            if (digitalRead(pin_rows[row]) == LOW) {
-                // Wait until the key is released.
-                while (digitalRead(pin_rows[row]) == LOW) {
-                    delay(10);
-                }
-                return keys[row][col];
-            }
-        }
+  for (int col = 0; col < KEYPAD_NUM_COLS; col++) {
+    // Set all columns to HIGH first.
+    for (int i = 0; i < KEYPAD_NUM_COLS; i++) {
+      digitalWrite(pin_columns[i], HIGH);
     }
-    return '\0';
+    // Set the current column to LOW.
+    digitalWrite(pin_columns[col], LOW);
+    // Check for keypress on each row.
+    for (int row = 0; row < KEYPAD_NUM_ROWS; row++) {
+      // Key pressed
+      if (digitalRead(pin_rows[row]) == LOW) {
+        // Wait until the key is released.
+        while (digitalRead(pin_rows[row]) == LOW) {
+          delay(10);
+        }
+        return keys[row][col];
+      }
+    }
+  }
+  return '\0';
 }
 
 bool is_num(char key) {
@@ -142,7 +152,7 @@ bool is_num(char key) {
 
 void play_tone(int frequency, int duration) {
   size_t bytes_written;
-  const int sample_rate = 44100; // Hz
+  const int sample_rate = 44100;
   const int samples_per_cycle = sample_rate / frequency;
   const int amplitude = 8000;
 
@@ -162,21 +172,24 @@ void play_tone(int frequency, int duration) {
 
 void nod(int correctness) {
   int pos;
-  int servo_pin;
-  int servo_delay = 20;
-  if (correctness == CORRECT) {
-    servo_pin = YES_SERVO;
-  } else {
-    servo_pin = NO_SERVO;
-  }
+  int servo_delay = 5;
+  Adafruit_SoftServo servo = (correctness == CORRECT) ? yes_servo : no_servo;
+
+  // Nod up-and-down or side-to-side twice
   for (int i = 0; i < 2; i++) {
-    for (pos = 0; pos <= PWM_PER_DEG * 180; pos += PWM_PER_DEG) {
-      analogWrite(servo_pin, (int) pos);
+    for (pos = 0; pos < 180; pos += 2) {
+      servo.write(pos);
       delay(servo_delay);
+      if (pos % 5 == 0) {
+        servo.refresh();
+      }
     }
-    for (pos = PWM_PER_DEG * 180; pos >= 0; pos -= PWM_PER_DEG) {
-      analogWrite(servo_pin, (int) pos);
+    for (pos = 179; pos >= 0; pos -= 2) {
+      servo.write(pos);
       delay(servo_delay);
+      if (pos % 5 == 0) {
+        servo.refresh();
+      }
     }
   }
 }
@@ -194,28 +207,21 @@ void correct() {
   print_correctness("Correct!");
   score += 1;
   play_tone(1800, TONE_DURATION);
-  // TODO: REMOVE LATER
-  return;
-
   nod(CORRECT);
 }
 
 void incorrect() {
   print_correctness("Incorrect!");
   play_tone(500, TONE_DURATION);
-  // TODO: REMOVE LATER
-  return;
-
   nod(INCORRECT);
 }
 
 void loading_screen() {
   clear_lcd();
   print_centered("*: del, #: esc", TOP);
-  print_centered("Button submits.", BOTTOM);
+  print_centered(" Button submits.", BOTTOM);
   lcd.noCursor();
-  // TODO: LENGTHEN TO 5000 LATER
-  delay(2000);
+  delay(5000);
   clear_lcd();
 }
 
@@ -254,39 +260,39 @@ void display_results() {
   questions_answered = 0;
 
   // Enter the main loop again.
-  // TODO: LENGTHEN TO 5000 LATER
-  delay(2000);
+  delay(5000);
   clear_lcd();
   initial_output();
 }
 
 void setup() {
-    // Initialize devices.
-    init_devices();
-    initial_output();
-    Serial.begin(9600);
-    while (!Serial);
-    Serial.println("Initialization complete!");
+  // Initialize devices.
+  init_devices();
+  initial_output();
+  Serial.begin(9600);
+  while (!Serial);
+  Serial.println("Initialization complete!");
 }
 
 void loop() {
-    char key = scan_keypad();
-    if (key == 'A' or key == 'B') {
-      lcd.print(String(key));
-      delay(500);
-      loading_screen();
+  char key = scan_keypad();
+  if (key == 'A' or key == 'B') {
+    lcd.noCursor();
+    lcd.print(String(key));
+    delay(500);
+    loading_screen();
 
-      // Math Game
-      if (key == 'A') {
-        Serial.println("Math game loading...");
-        math_main();
-      }
-      // Music Game
-      else if (key == 'B') {
-        Serial.println("Music game loading...");
-        music_main();
-      }
-      display_results();
+    // Math Game
+    if (key == 'A') {
+      Serial.println("Math game loading...");
+      math_main();
     }
-    delay(100);
+    // Music Game
+    else if (key == 'B') {
+      Serial.println("Music game loading...");
+      music_main();
+    }
+    display_results();
+  }
+  delay(100);
 }

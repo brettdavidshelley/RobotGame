@@ -4,11 +4,11 @@
 AlmostRandom MUSIC_RANDOM = AlmostRandom();
 
 // Ultrasonic Sensor
-#define TRIG             4
-#define ECHO             5
-#define MIN_CM           5
-#define MAX_CM           45
-#define MIN_HZ           31
+#define TRIG             12
+#define ECHO             13
+#define MIN_CM           2
+#define MAX_CM           30
+#define MIN_HZ           40
 #define MAX_HZ           5000
 Ultrasonic ultrasonic(TRIG, ECHO);
 int sensor_distance;
@@ -20,6 +20,9 @@ const int NOTES_LEN = 7;
 const double SCALEDOWN = 255 / (NOTES_LEN - 1);
 const char NOTES[NOTES_LEN] = {'A', 'B', 'C', 'D', 'E', 'F', 'G'};
 
+// For statistics tracking.
+int NOTE_COUNT[NOTES_LEN] = {0, 0, 0, 0, 0, 0, 0};
+
 void music_main() {
   while (1) {
     clear_lcd();
@@ -29,25 +32,9 @@ void music_main() {
     if (note_byte < 0) {
       note_byte *= -1;
     }
-
-    // char note = 'A';
-    // // Equal chance of A, B, C, D, E, F, or G
-    // if (note_byte <= 36) {
-    //   note = 'B';
-    // } else if (note_byte <= 73) {
-    //   note = 'C';
-    // } else if (note_byte <= 109) {
-    //   note = 'D';
-    // } else if (note_byte <= 145) {
-    //   note = 'E';
-    // } else if (note_byte <= 181) {
-    //   note = 'F';
-    // } else if (note_byte <= 217) {
-    //   note = 'G';
-    // }
-
     int note_index = (int) (note_byte / SCALEDOWN);
     char note = NOTES[note_index];
+    NOTE_COUNT[note_index]++;
 
     // Calculate answer and wait for user input.
     String question_top = "Select note: " + String(note);
@@ -70,6 +57,15 @@ void music_main() {
     // Serial.println("Selected Note: " + String(selected_note));
     // Serial.println(note == selected_note ? "Correct!\n" : "Incorrect!\n");
     // play_tone(selected_freq, 2000);
+
+    // int sum = 0;
+    // for (int i = 0; i < NOTES_LEN; i++) {
+    //   sum += NOTE_COUNT[i];
+    // }
+    // for (int i = 0; i < NOTES_LEN; i++) {
+    //   float percent = NOTE_COUNT[i] * 1.0 / sum;
+    //   Serial.println(String(NOTES[i]) + ": " + String(percent) + "%");
+    // }
     // continue;
 
     char response = process_input_music();
@@ -79,9 +75,9 @@ void music_main() {
     // Exit
     if (response == '#') {
       clear_lcd();
+      print_note_stats();
       return;
     }
-
     // Compare answer and response.
     if (response == note) {
       correct();
@@ -110,9 +106,12 @@ char process_input_music() {
 
     // Read sensor distance in cm.
     sensor_distance = ultrasonic.read();
+    Serial.println("Sensor Distance: " + String(sensor_distance) + "cm");
     if (valid_distance(sensor_distance)) {
       selected_freq = cm_to_freq(sensor_distance);
       selected_note = freq_to_note(selected_freq);
+      Serial.println("Selected Frequency: " + String(selected_freq) + "Hz");
+      Serial.println("Selected Note: " + String(selected_note));
       play_tone(selected_freq, 100);
     }
 
@@ -122,7 +121,7 @@ char process_input_music() {
       i2s_stop(I2S_NUM);
       break;
     }
-    delay(100);
+    delay(200);
   }
   return selected_note;
 }
@@ -139,4 +138,16 @@ char freq_to_note(int freq) {
   int noteIndex = (semitoneDifference % SEMI_PER_OCT + SEMI_PER_OCT) % SEMI_PER_OCT;
   int naturalNoteIndex = noteIndex % NOTES_LEN;
   return NOTES[naturalNoteIndex];
+}
+
+void print_note_stats() {
+  int sum = 0;
+  for (int i = 0; i < NOTES_LEN; i++) {
+    sum += NOTE_COUNT[i];
+  }
+  Serial.println("Total Notes: " + String(sum));
+  for (int i = 0; i < NOTES_LEN; i++) {
+    float percent = NOTE_COUNT[i] * 1.0 / sum;
+    Serial.print(String(NOTES[i]) + ": " + String(percent) + "%  ");
+  }
 }
