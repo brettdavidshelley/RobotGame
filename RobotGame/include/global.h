@@ -11,4 +11,4 @@
 #define I2S_DATA_PIN      3          // Data In (DIN)
 
 // Button
-#define BUTTON           15
+#define BUTTON            15

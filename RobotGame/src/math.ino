@@ -47,11 +47,9 @@ void math_main() {
     Serial.print("Question: ");
     Serial.println(question);
     print_centered(question, TOP);
-
     answer = calculate_answer(num1, op, num2);
     Serial.print("Answer: ");
     Serial.println(answer);
-
     center_cursor(BOTTOM);
     int response = process_input_math();
     Serial.print("User Response: ");
@@ -62,7 +60,6 @@ void math_main() {
       clear_lcd();
       return;
     }
-
     // Compare answer and response
     if (response == answer) {
       correct();
@@ -85,7 +82,7 @@ int process_input_math() {
 
   // While the submit button is not pressed, build the response string.
   while (1) {
-    // Scan for inputs.
+    // Scan for valid inputs.
     do {
       key = scan_keypad();
       delay(100);
@@ -121,17 +118,14 @@ int process_input_math() {
     return -1;
   } else if (response == "") {
     // Ensure a blank response is incorrect.
-    if (answer == 0) {
-      return 1;
-    } else {
-      return 0;
-    }
+    return (answer == 0) ? 1 : 0;
   } else {
     return response.toInt();
   }
 }
 
 int calculate_answer(int num1, char op, int num2) {
+  // Calculate the integer representation of the correct answer.
   if (op == '+') {
     return num1 + num2;
   } else if (op == '-') {

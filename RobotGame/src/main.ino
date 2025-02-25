@@ -5,7 +5,9 @@
 #include "games.h"
 #include "global.h"
 
-// Results tracking
+// Results & Gameplay Tracking
+#define MATH             0
+#define MUSIC            1
 #define INCORRECT        0
 #define CORRECT          1
 int questions_answered;
@@ -147,6 +149,7 @@ char scan_keypad() {
 }
 
 bool is_num(char key) {
+  // ASCII values for '0' and '9', respectively
   return (key >= 48 && key <= 57);
 }
 
@@ -195,6 +198,7 @@ void nod(int correctness) {
 }
 
 void print_correctness(String correctness_str) {
+  // "Correct!" or "Incorrect!"
   Serial.println(correctness_str);
   lcd.noCursor();
   clear_lcd();
@@ -216,9 +220,10 @@ void incorrect() {
   nod(INCORRECT);
 }
 
-void loading_screen() {
+void loading_screen(int game) {
   clear_lcd();
-  print_centered("*: del, #: esc", TOP);
+  String top_loading_str = (game == MATH) ? "*: del, #: esc" : "#: escape";
+  print_centered(top_loading_str, TOP);
   print_centered(" Button submits.", BOTTOM);
   lcd.noCursor();
   delay(5000);
@@ -275,21 +280,23 @@ void setup() {
 }
 
 void loop() {
+  // Scan for valid inputs.
   char key = scan_keypad();
   if (key == 'A' or key == 'B') {
     lcd.noCursor();
     lcd.print(String(key));
     delay(500);
-    loading_screen();
 
     // Math Game
     if (key == 'A') {
       Serial.println("Math game loading...");
+      loading_screen(MATH);
       math_main();
     }
     // Music Game
     else if (key == 'B') {
       Serial.println("Music game loading...");
+      loading_screen(MUSIC);
       music_main();
     }
     display_results();

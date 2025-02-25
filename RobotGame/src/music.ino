@@ -36,7 +36,6 @@ void music_main() {
     char note = NOTES[note_index];
     NOTE_COUNT[note_index]++;
 
-    // Calculate answer and wait for user input.
     String question_top = "Select note: " + String(note);
     String question_bottom = "with the sensor.";
     print_centered(question_top, TOP);
@@ -68,6 +67,7 @@ void music_main() {
     // }
     // continue;
 
+    // Await user response.
     char response = process_input_music();
     Serial.print("User Reponse: ");
     Serial.println(response);
@@ -111,11 +111,14 @@ char process_input_music() {
       selected_freq = cm_to_freq(sensor_distance);
       selected_note = freq_to_note(selected_freq);
       Serial.println("Selected Frequency: " + String(selected_freq) + "Hz");
-      Serial.println("Selected Note: " + String(selected_note));
       play_tone(selected_freq, 100);
+    } else {
+      // Ensure invalid distances are incorrect.
+      selected_note = 'Z';
     }
+    Serial.println("Selected Note: " + String(selected_note));
 
-    // If an answer has been submitted, return.
+    // If an answer has been submitted, turn off the speaker and return.
     if (digitalRead(BUTTON) == HIGH) {
       delay(100);
       i2s_stop(I2S_NUM);
@@ -141,6 +144,7 @@ char freq_to_note(int freq) {
 }
 
 void print_note_stats() {
+  // Print what percentage of each note was randomly generated for this session.
   int sum = 0;
   for (int i = 0; i < NOTES_LEN; i++) {
     sum += NOTE_COUNT[i];
@@ -149,5 +153,6 @@ void print_note_stats() {
   for (int i = 0; i < NOTES_LEN; i++) {
     float percent = NOTE_COUNT[i] * 1.0 / sum;
     Serial.print(String(NOTES[i]) + ": " + String(percent) + "%  ");
+    NOTE_COUNT[i] = 0;
   }
 }
