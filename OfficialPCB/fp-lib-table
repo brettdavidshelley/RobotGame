@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "PCB Audio Schematic")(type "KiCad")(uri "$(KIPRJMOD)/PCB Audio Schematic.pretty")(options "")(descr ""))
+)
