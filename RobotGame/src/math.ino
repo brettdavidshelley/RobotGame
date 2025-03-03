@@ -2,6 +2,7 @@
 
 AlmostRandom MATH_RANDOM = AlmostRandom();
 String question;
+int answer;
 
 void math_main() {
   while (1) {
@@ -26,8 +27,15 @@ void math_main() {
       scaledown = 328;
     }
     int num1 = MATH_RANDOM.getRandomInt() / scaledown;
+    if (num1 < 0) {
+      num1 *= -1;
+    }
     int num2 = MATH_RANDOM.getRandomInt() / scaledown;
-
+    if (num2 < 0) {
+      num2 *= -1;
+    }
+    
+    // No negative answers
     if (op == '-' && num1 < num2) {
       int temp = num1;
       num1 = num2;
@@ -36,18 +44,22 @@ void math_main() {
 
     // Calculate answer and wait for user input.
     question = String(num1) + ' ' + op + ' ' + String(num2);
+    Serial.print("Question: ");
+    Serial.println(question);
     print_centered(question, TOP);
-    int answer = calculate_answer(num1, op, num2);
+    answer = calculate_answer(num1, op, num2);
+    Serial.print("Answer: ");
+    Serial.println(answer);
     center_cursor(BOTTOM);
     int response = process_input_math();
+    Serial.print("User Response: ");
+    Serial.println(response);
 
     // Exit
     if (response == -1) {
       clear_lcd();
-      initial_output();
       return;
     }
-
     // Compare answer and response
     if (response == answer) {
       correct();
@@ -60,10 +72,7 @@ void math_main() {
 }
 
 bool valid_input(char key) {
-  if (is_num(key) || key == '*') {
-    return true;
-  }
-  return false;
+  return (is_num(key) || key == '*' || key == '#');
 }
 
 int process_input_math() {
@@ -73,7 +82,7 @@ int process_input_math() {
 
   // While the submit button is not pressed, build the response string.
   while (1) {
-    // Scan for inputs.
+    // Scan for valid inputs.
     do {
       key = scan_keypad();
       delay(100);
@@ -81,40 +90,42 @@ int process_input_math() {
         submitted = true;
         break;
       }
-    } while (key == '\0');
+    } while (!valid_input(key));
 
-    if (valid_input(key)) {
-      // Append the input to the response.
-      if (is_num(key)) {
-        response += String(key);
-      }
-
-      // Backspace
-      else if (key == '*') {
-        response.remove(strlen(response.c_str()) - 1);
-      }
-      
-      // Show current response on bottom row.
-      clear_lcd();
-      print_centered(question, TOP);
-      print_centered(response, BOTTOM);
-    }
     // If an answer has been submitted or an exit has been requested, break the loop.
     if (submitted || key == '#') {
       break;
     }
+    // Do nothing if a backspace has been requested with an empty string.
+    if (key == '*' && strlen(response.c_str()) <= 0) {
+      continue;
+    }
+    // Append the input to the response.
+    if (is_num(key)) {
+      response += String(key);
+    }
+    // Backspace
+    else if (key == '*' && strlen(response.c_str()) > 0) {
+      response.remove(strlen(response.c_str()) - 1);
+    }
+    // Show current response on bottom row.
+    clear_lcd();
+    print_centered(question, TOP);
+    print_centered(response, BOTTOM);
   }
   // Return
   if (key == '#') {
     return -1;
   } else if (response == "") {
-    return 0;
+    // Ensure a blank response is incorrect.
+    return (answer == 0) ? 1 : 0;
   } else {
     return response.toInt();
   }
 }
 
 int calculate_answer(int num1, char op, int num2) {
+  // Calculate the integer representation of the correct answer.
   if (op == '+') {
     return num1 + num2;
   } else if (op == '-') {

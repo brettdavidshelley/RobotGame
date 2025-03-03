@@ -1,0 +1,68 @@
+#include "Arduino.h"
+#include "driver/i2s.h"
+
+#define I2S_NUM           I2S_NUM_0  // I2S port number
+#define I2S_BCK_PIN       3          // Bit Clock (BCK)
+#define I2S_LRCK_PIN      4          // Word Select (LRCK)
+#define I2S_DATA_PIN      2          // Data In (DIN)
+
+// Define melody notes and durations
+const int melody[] = {
+  262, 294, 330, 349, 392, 440, 494, 523  // C4, D4, E4, F4, G4, A4, B4, C5
+};
+
+const int noteDurations[] = {
+  500, 500, 500, 500, 500, 500, 500, 500  // 500 ms per note
+};
+
+void setup() {
+  // Configure I2S
+  i2s_config_t i2s_config = {
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+    .sample_rate = 44100,
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+    .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+    .communication_format = I2S_COMM_FORMAT_I2S_MSB,
+    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+    .dma_buf_count = 8,
+    .dma_buf_len = 64,
+    .use_apll = false
+  };
+  
+  // Install and start I2S driver
+  i2s_driver_install(I2S_NUM, &i2s_config, 0, NULL);
+
+  // Configure I2S pins
+  i2s_pin_config_t pin_config = {
+    .bck_io_num = I2S_BCK_PIN,
+    .ws_io_num = I2S_LRCK_PIN,
+    .data_out_num = I2S_DATA_PIN,
+    .data_in_num = I2S_PIN_NO_CHANGE
+  };
+  i2s_set_pin(I2S_NUM, &pin_config);
+}
+
+void loop() {
+  for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
+    playTone(melody[i], noteDurations[i]);
+    delay(100);  // Short gap between notes
+  }
+}
+
+void playTone(int frequency, int duration) {
+  size_t bytes_written;
+  const int sample_rate = 44100; // Hz
+  const int samples_per_cycle = sample_rate / frequency;
+  const int amplitude = 8000;
+
+  int16_t samples[samples_per_cycle];
+  for (int i = 0; i < samples_per_cycle; i++) {
+    samples[i] = amplitude * sin(2 * PI * i / samples_per_cycle);
+  }
+
+  // Calculate how many cycles to play for the given duration
+  int cycles = (duration / 1000.0) * frequency;
+  for (int c = 0; c < cycles; c++) {
+    i2s_write(I2S_NUM, samples, sizeof(samples), &bytes_written, portMAX_DELAY);
+  }
+}
