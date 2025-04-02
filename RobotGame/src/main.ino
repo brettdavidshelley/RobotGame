@@ -175,25 +175,27 @@ void play_tone(int frequency, int duration) {
 
 void nod(int correctness) {
   int pos;
-  int servo_delay = 5;
+  int servo_delay = 10;
   Adafruit_SoftServo servo = (correctness == CORRECT) ? yes_servo : no_servo;
 
   // Nod up-and-down or side-to-side twice
   for (int i = 0; i < 2; i++) {
-    for (pos = 0; pos < 180; pos += 2) {
+    for (pos = 0; pos < 120; pos += 2) {
       servo.write(pos);
       delay(servo_delay);
       if (pos % 5 == 0) {
         servo.refresh();
       }
     }
-    for (pos = 179; pos >= 0; pos -= 2) {
+    delay(servo_delay * 5);
+    for (pos = 120; pos >= 0; pos -= 2) {
       servo.write(pos);
       delay(servo_delay);
       if (pos % 5 == 0) {
         servo.refresh();
       }
     }
+    delay(servo_delay * 5);
   }
 }
 
